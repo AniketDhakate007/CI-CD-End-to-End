@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #2d3436;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #city {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        #city:focus {
+            border-color: #74b9ff;
+            box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        #btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        #btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.4);
+        }
+
+        #btn:active {
+            transform: translateY(-1px);
+        }
+
+        #result {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            border: 1px solid rgba(116, 185, 255, 0.2);
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #result p {
+            margin: 8px 0;
+            font-size: 18px;
+            color: #2d3436;
+            line-height: 1.6;
+        }
+
+        #result strong {
+            color: #0984e3;
+            font-weight: 600;
+        }
+
+        #result img {
+            margin: 15px 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(116, 185, 255, 0.1);
+            padding: 10px;
+        }
+
+        .error {
+            color: #e74c3c !important;
+            font-weight: 600;
+        }
+
+        .weather-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: rgba(116, 185, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(116, 185, 255, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            #city, #btn {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .weather-info {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Weather App</h1>
+    <div class="input-group">
+        <input type="text" id="city" placeholder="Enter city name...">
+        <button id="btn">Get Weather</button>
+    </div>
+    <div id="result"></div>
+</div>
+
+<script>
+    async function getWeather() {
+        const city = document.getElementById("city").value.trim();
+        const resultDiv = document.getElementById("result");
+        const btn = document.getElementById("btn");
+
+        if (!city) {
+            resultDiv.innerHTML = "<p class='error'>Please enter a city name</p>";
+            return;
+        }
+
+        // Show loading state
+        btn.innerHTML = '<span class="loading"></span> Loading...';
+        btn.disabled = true;
+        resultDiv.innerHTML = "<p>Fetching weather data...</p>";
+
+        try {
+            const response = await fetch(`/weather?city=${encodeURIComponent(city)}`);
+            if (!response.ok) {
+                throw new Error("City not found or server error");
+            }
+            const data = await response.json();
+
+            resultDiv.innerHTML = `
+                <div class="weather-info">
+                    <div class="info-card">
+                        <p><strong>Location:</strong><br>${data.location.name}, ${data.location.country}</p>
+                    </div>
+                    <div class="info-card">
+                        <p><strong>Temperature:</strong><br>${data.current.temp_c} °C</p>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <p><strong>Condition:</strong> ${data.current.condition.text}</p>
+                    <img src="${data.current.condition.icon}" alt="${data.current.condition.text}">
+                </div>
+            `;
+        } catch (err) {
+            resultDiv.innerHTML = `<p class='error'>Error: ${err.message}</p>`;
+        } finally {
+            // Reset button
+            btn.innerHTML = 'Get Weather';
+            btn.disabled = false;
+        }
+    }
+
+    // Event listeners
+    document.getElementById("btn").addEventListener("click", getWeather);
+    document.getElementById("city").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            getWeather();
+        }
+    });
+
+    // Focus on input when page loads
+    window.addEventListener("load", function() {
+        document.getElementById("city").focus();
+    });
+</script>
+</body>
+</html>
